@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../data/tarot_data.dart';
 import '../models/tarot_card.dart';
@@ -66,8 +68,17 @@ class _CardDrawScreenState extends State<CardDrawScreen>
 
       _flipController.forward().then((_) {
         setState(() => _showResult = true);
+        _saveToHistory();
       });
     });
+  }
+
+  Future<void> _saveToHistory() async {
+    if (_drawnCard == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final history = prefs.getStringList('tarot_history') ?? [];
+    history.add(json.encode(_drawnCard!.toJson()));
+    await prefs.setStringList('tarot_history', history);
   }
 
   void _resetDraw() {
