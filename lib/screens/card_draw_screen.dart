@@ -6,6 +6,8 @@ import '../theme/app_theme.dart';
 import '../data/tarot_data.dart';
 import '../models/tarot_card.dart';
 import '../widgets/tarot_card_widget.dart';
+import '../widgets/banner_ad_widget.dart';
+import '../services/ad_service.dart';
 
 class CardDrawScreen extends StatefulWidget {
   const CardDrawScreen({super.key});
@@ -19,6 +21,7 @@ class _CardDrawScreenState extends State<CardDrawScreen>
   DrawnCard? _drawnCard;
   bool _isDrawing = false;
   bool _showResult = false;
+  bool _showDetailedReading = false;
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
 
@@ -69,6 +72,7 @@ class _CardDrawScreenState extends State<CardDrawScreen>
       _flipController.forward().then((_) {
         setState(() => _showResult = true);
         _saveToHistory();
+        AdService().onCardDrawn();
       });
     });
   }
@@ -85,6 +89,7 @@ class _CardDrawScreenState extends State<CardDrawScreen>
     setState(() {
       _drawnCard = null;
       _showResult = false;
+      _showDetailedReading = false;
     });
     _flipController.reset();
   }
@@ -174,6 +179,35 @@ class _CardDrawScreenState extends State<CardDrawScreen>
               if (_showResult && _drawnCard != null) ...[
                 const SizedBox(height: 10),
                 _buildInterpretation(),
+                // 상세 해석 (보상형 광고 또는 프리미엄)
+                if (!_showDetailedReading && !AdService().isPremium) ...[
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      AdService().showRewardedAd(
+                        onRewarded: () {
+                          if (mounted) {
+                            setState(() => _showDetailedReading = true);
+                          }
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.play_circle_outline, size: 20),
+                    label: const Text('광고 보고 상세 해석 보기'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.amber,
+                      side: const BorderSide(color: Colors.amber),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+                if (_showDetailedReading || AdService().isPremium) ...[
+                  const SizedBox(height: 16),
+                  _buildDetailedReading(),
+                ],
                 const SizedBox(height: 20),
                 OutlinedButton.icon(
                   onPressed: _resetDraw,
@@ -188,6 +222,8 @@ class _CardDrawScreenState extends State<CardDrawScreen>
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                const BannerAdWidget(),
                 const SizedBox(height: 20),
               ],
             ],
@@ -238,6 +274,58 @@ class _CardDrawScreenState extends State<CardDrawScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetailedReading() {
+    final card = _drawnCard!;
+    final isReversed = card.isReversed;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withAlpha(77)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+              SizedBox(width: 8),
+              Text(
+                '상세 해석',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            isReversed
+                ? '${card.card.nameKo} 역방향이 나왔습니다.\n\n'
+                    '이 카드는 내면의 에너지가 막혀있거나 아직 준비되지 않은 상태를 나타냅니다. '
+                    '지금은 무리하게 앞으로 나아가기보다 잠시 멈추고 자신을 돌아볼 시간입니다.\n\n'
+                    '오늘의 조언: 서두르지 마세요. 때가 되면 자연스럽게 길이 열릴 것입니다. '
+                    '내면의 목소리에 귀를 기울이고, 자신의 감정을 솔직하게 마주해보세요.'
+                : '${card.card.nameKo} 정방향이 나왔습니다.\n\n'
+                    '이 카드는 긍정적인 에너지가 당신에게 흐르고 있음을 의미합니다. '
+                    '지금 하고 있는 일에 확신을 가지고 계속 나아가세요.\n\n'
+                    '오늘의 조언: 당신의 직감을 믿으세요. 우주가 당신을 올바른 방향으로 '
+                    '이끌고 있습니다. 새로운 기회가 찾아올 수 있으니 열린 마음을 유지하세요.',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.white70,
+              height: 1.7,
+            ),
+          ),
+        ],
       ),
     );
   }

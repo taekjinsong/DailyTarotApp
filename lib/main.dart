@@ -6,10 +6,14 @@ import 'screens/card_draw_screen.dart';
 import 'screens/fortune_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/ad_service.dart';
+import 'services/purchase_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await AdService().initialize();
+  await PurchaseService().initialize();
   runApp(const DailyTarotApp());
 }
 

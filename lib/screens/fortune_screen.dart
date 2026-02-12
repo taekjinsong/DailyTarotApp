@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../data/fortune_data.dart';
+import '../widgets/banner_ad_widget.dart';
 
 class FortuneScreen extends StatefulWidget {
   const FortuneScreen({super.key});
@@ -158,6 +159,8 @@ class _FortuneScreenState extends State<FortuneScreen> {
                   int.parse(_fortune!['healthScore']!),
                   const [Color(0xFF2980B9), Color(0xFF3498DB)],
                 ),
+                const SizedBox(height: 16),
+                const BannerAdWidget(),
                 const SizedBox(height: 20),
               ] else ...[
                 const SizedBox(height: 60),
